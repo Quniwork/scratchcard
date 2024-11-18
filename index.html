@@ -11,31 +11,35 @@
   <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
   <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="css/style2.css">
 </head>
 
 <body>
   <div id="app">
-    <div class="float">
-      <img src="image/float01.png" class="float01">
-      <img src="image/float02.png" class="float02">
-    </div>
     <header>
-      <div class="header-left">
-        <div class="header-number">
-          <span class="year">2024</span>
-          <span class="period">第4期</span>
+      <div class="header-container">
+        <div class="header-infor">
+          <div class="header-number">
+            <span>{{ TOTAL_NUMBERS - revealedNumbers.filter(n => n !== null).length }}</span>/<span>{{ TOTAL_NUMBERS }}</span>
+          </div>
+          <div class="header-datetime">{{ currentDateTime }}</div>
         </div>
-        <ul class="scratch-rule">
-          <li>此活動為額外加碼，非機台內販售商品</li>
-          <li>符合資格可自由參加，同意再投幣</li>
-          <li>請遵守活動規則，若 多刮、作弊 及獲獎無效</li>
-          <li>台主擁有變更或提前結束活動權利</li>
-        </ul>
-        <img src="image/logo.png" class="scratch-logo">
+        <div class="header-rule">
+          <ul class="scratch-rule">
+            <li>此活動為額外加碼，非機台內販售商品</li>
+            <li>符合資格可自由參加，同意再投幣</li>
+            <li>請遵守活動規則，若 多刮、作弊 及獲獎無效</li>
+            <li>台主擁有變更或提前結束活動權利</li>
+          </ul>
+        </div>
+      </div>
+      <div class="header-float">
+        <img src="image/float01.png" class="float01">
       </div>
     </header>
     <main class="scratch-wrap">
+      <!-- <div class="main-float">
+        <img src="image/float02.png" class="float02">
+      </div> -->
       <div class="grid-container">
         <button v-for="(num, index) in gridNumbers"
                 :key="index"
@@ -52,10 +56,10 @@
       </div>
       
       <!-- 添加測試按鈕 -->
-      <div class="test-buttons">
+      <!-- <div class="test-buttons">
         <button @click="testRedeem">測試兌換</button>
         <button @click="resetRedeem">重置兌換狀態</button>
-      </div>
+      </div> -->
     </main>
 
     <div v-if="showModal" class="modal">
@@ -76,12 +80,12 @@
         </div>
 
         <p class="scratch-card-text">🎁 刮出您的幸運數字!</p>
-        <button class="close-button" @click="closeModal">{{ isScratched ? '關閉' : '換一個' }}</button>
-        <button v-if="isScratched && !redeemedNumbers[currentIndex]" 
+        <button class="close-button" @click="closeModal" :disabled="isScratching">{{ isScratched ? '關閉' : '換一個' }}</button>
+        <!-- <button v-if="isScratched && !redeemedNumbers[currentIndex]" 
                 class="redeem-button" 
                 @click="redeemNumber">
           兌換獎品
-        </button>
+        </button> -->
       </div>
     </div>
 
@@ -104,17 +108,37 @@
 
     const app = createApp({
       setup() {
+        const TOTAL_NUMBERS = 68; // 總數量設定
+        
         const isSafari = ref(/^((?!chrome|android).)*safari/i.test(navigator.userAgent));
         let previousUrl = null;
 
         const showModal = ref(false);
         const currentIndex = ref(null);
         const currentNumber = ref(null);
-        const gridNumbers = ref(Array(80).fill(null).map((_, i) => i + 1).sort(() => Math.random() - 0.5));
-        const revealedNumbers = ref(Array(80).fill(null));
-        const redeemedNumbers = ref(Array(80).fill(false)); // 新增兌換狀態追蹤
+        const gridNumbers = ref(Array(TOTAL_NUMBERS).fill(null).map((_, i) => i + 1).sort(() => Math.random() - 0.5));
+        const revealedNumbers = ref(Array(TOTAL_NUMBERS).fill(null));
+        const redeemedNumbers = ref(Array(TOTAL_NUMBERS).fill(false));
         const numberCanvas = ref(null);
         const isScratched = ref(false);
+        const isScratching = ref(false);
+        const currentDateTime = ref('');
+
+        // 更新當前時間
+        const updateDateTime = () => {
+          const now = new Date();
+          const year = now.getFullYear();
+          const month = String(now.getMonth() + 1).padStart(2, '0');
+          const day = String(now.getDate()).padStart(2, '0');
+          const hours = String(now.getHours()).padStart(2, '0');
+          const minutes = String(now.getMinutes()).padStart(2, '0');
+          const seconds = String(now.getSeconds()).padStart(2, '0');
+          currentDateTime.value = `${year}/${month}/${day} ${hours}:${minutes}:${seconds}`;
+        };
+
+        // 初始化時更新時間並每秒更新
+        updateDateTime();
+        setInterval(updateDateTime, 1000);
 
         // 新增兌換功能
         const redeemNumber = () => {
@@ -138,7 +162,7 @@
         };
 
         const resetRedeem = () => {
-          redeemedNumbers.value = Array(80).fill(false);
+          redeemedNumbers.value = Array(TOTAL_NUMBERS).fill(false);
         };
 
         const scratchCardCover = ref(null);
@@ -156,11 +180,64 @@
         const drawNumber = () => {
           const ctx = numberCanvas.value.getContext('2d');
           ctx.clearRect(0, 0, 200, 200);
-          ctx.font = 'bold 72px Inter';
+          
+          // 設置字體樣式
+          const fonts = ['Inter', 'Arial', 'Verdana'];
+          const randomFont = fonts[Math.floor(Math.random() * fonts.length)];
+          const fontSize = Math.floor(Math.random() * 20 + 60); // 60-80之間
+          ctx.font = `bold ${fontSize}px ${randomFont}`;
+          
+          // 計算文字寬度以確保不會被切到
+          const textWidth = ctx.measureText(currentNumber.value).width;
+          
+          // 根據文字寬度計算安全的x範圍
+          const minX = textWidth/2 + 10;
+          const maxX = 200 - textWidth/2 - 10;
+          const x = Math.random() * (maxX - minX) + minX;
+          
+          // 根據字體大小計算安全的y範圍
+          const minY = fontSize/2 + 10;
+          const maxY = 200 - fontSize/2 - 10;
+          const y = Math.random() * (maxY - minY) + minY;
+          
+          // 隨機旋轉角度(減少旋轉範圍以避免切到)
+          const rotation = (Math.random() - 0.5) * 0.3;
+          
+          ctx.save();
+          ctx.translate(x, y);
+          ctx.rotate(rotation);
+          
+          // 隨機傾斜(減少傾斜範圍以避免切到)
+          ctx.transform(1, Math.random() * 0.2 - 0.1, Math.random() * 0.2 - 0.1, 1, 0, 0);
+          
+          // 設置文字樣式
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
-          ctx.fillStyle = '#000';
-          ctx.fillText(currentNumber.value, 100, 100);
+          ctx.fillStyle = '#222';
+          
+          // 添加陰影效果
+          ctx.shadowColor = 'rgba(0,0,0,0.1)';
+          ctx.shadowBlur = 5;
+          ctx.shadowOffsetX = 2;
+          ctx.shadowOffsetY = 2;
+          
+          // 繪製數字
+          ctx.fillText(currentNumber.value, 0, 0);
+          
+          // 添加雜訊效果
+          for(let i = 0; i < 500; i++) {
+            const noiseX = Math.random() * 200;
+            const noiseY = Math.random() * 200;
+            const size = Math.random() * 1.5;
+            const opacity = Math.random() * 0.3;
+            
+            ctx.fillStyle = `rgba(0,0,0,${opacity})`;
+            ctx.beginPath();
+            ctx.arc(noiseX - x, noiseY - y, size, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          
+          ctx.restore();
         };
 
         const openScratchCard = (index) => {
@@ -168,6 +245,7 @@
           currentNumber.value = gridNumbers.value[index];
           showModal.value = true;
           isScratched.value = false;
+          isScratching.value = false;
           setTimeout(() => {
             initCanvas();
             drawNumber();
@@ -175,14 +253,17 @@
         };
 
         const closeModal = () => {
-          showModal.value = false;
-          if(canvas.value) {
-            context.value.clearRect(0, 0, canvas.value.width, canvas.value.height);
+          if (!isScratching.value) {
+            showModal.value = false;
+            if(canvas.value) {
+              context.value.clearRect(0, 0, canvas.value.width, canvas.value.height);
+            }
+            scratchCardCover.value?.classList.add('shine');
+            scratchCardCoverContainer.value?.classList.remove('clear', 'hidden');
+            scratchCardImage.value?.classList.remove('animate');
+            isScratched.value = false;
+            isScratching.value = false;
           }
-          scratchCardCover.value?.classList.add('shine');
-          scratchCardCoverContainer.value?.classList.remove('clear', 'hidden');
-          scratchCardImage.value?.classList.remove('animate');
-          isScratched.value = false;
         };
 
         const initCanvas = () => {
@@ -209,7 +290,7 @@
           }
 
           setupEventListeners();
-          
+
           // 添加點擊事件監聽器到scratch-card-number
           scratchCardImage.value.addEventListener('click', () => {
             isScratched.value = true;
@@ -220,6 +301,7 @@
             confetti({
               particleCount: 100,
               spread: 90,
+              zIndex: 9999,
               origin: {
                 y: (scratchCardText.value.getBoundingClientRect().bottom + 60) / window.innerHeight,
               },
@@ -232,6 +314,7 @@
         };
 
         const handlePointerDown = (e) => {
+          isScratching.value = true;
           scratchCardCover.value.classList.remove('shine');
           ({ x: positionX, y: positionY } = getPosition(e));
           clearTimeout(clearDetectionTimeout);
@@ -242,6 +325,7 @@
             canvas.value.removeEventListener('pointermove', plot);
             clearDetectionTimeout = setTimeout(() => {
               checkBlackFillPercentage();
+              isScratching.value = false;
             }, 500);
           }, { once: true });
         };
@@ -361,9 +445,12 @@
           closeModal,
           numberCanvas,
           isScratched,
+          isScratching,
           redeemNumber,
           testRedeem,
-          resetRedeem
+          resetRedeem,
+          currentDateTime,
+          TOTAL_NUMBERS
         }
       }
     })

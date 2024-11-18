@@ -1,0 +1,219 @@
+@use "base"
+@use "dialog"
+// @use "xdialog"
+
+$dev: false
+
+:root
+  --float01-width: 0
+  --float02-width: 0
+
+#app
+  width: 100dvw
+  overflow: hidden
+
+html
+  background: #F3C0B6 url(../image/bg.jpg) no-repeat top center/cover
+
+header
+  display: grid
+  grid-template-columns: 1fr auto
+  line-height: 1
+  color: #fff
+  padding: 20px 0 20px 30px
+  position: relative
+  .header-container
+    display: flex
+    justify-content: center
+    flex-direction: column
+    gap: 10px
+.header-infor
+  .header-number
+    display: flex
+    align-items: center
+    gap: 12px
+    font-size: 26px
+    line-height: 1
+    font-weight: bolder
+    font-family: 'Inter', sans-serif
+    padding: 0 0 10px 10px
+    span
+      font-size: 30px
+  .header-datetime
+    padding-left: 14px
+.header-rule
+  .scratch-rule
+    font-size: 12px
+    color: #fff
+    line-height: 1.6
+    padding-left: 2rem
+.header-float
+  display: none
+  width: var(--float01-width)
+  position: relative
+  &::after
+    content: ''
+    display: block
+    width: calc( var(--float01-width) / 1.5 )
+    height: calc( var(--float01-width) / 1.5 )
+    background-color: rgb(243 192 182 / 66%)
+    border-radius: 50%
+    filter: blur(25px)
+    position: absolute
+    left: 10px
+    bottom: -40px
+    z-index: 1
+    animation: floating 4s ease-in-out infinite
+  .float01
+    animation: floating 3s ease-in-out infinite
+    width: var(--float01-width)
+    position: absolute
+    bottom: -30px
+    right: 0
+    z-index: 2
+
+@keyframes floating
+  0%
+    transform: translateY(0)
+  50%
+    transform: translateY(-15px)
+  100%
+    transform: translateY(0)
+
+// main
+//   position: relative
+// .main-float
+//   display: none
+//   width: var(--float02-width)
+//   .float02
+//     animation: floating 4s ease-in-out infinite
+//     width: var(--float02-width)
+//     position: absolute
+//     bottom: -12%
+//     right: 0
+
+.grid-container
+  display: grid
+  grid-template-columns: repeat(6, 1fr)
+  gap: .5rem
+  background: #F9ECEC
+  border: 1px solid rgba(255, 255, 255, 0.7)
+  border-radius: 60px
+  padding: 20px
+  margin: 0 auto
+
+
+.grid-button
+  aspect-ratio: 1
+  border: none
+  background: #F6E6E6 url('../image/button.png') no-repeat center center/cover
+  border: 1px dashed transparent
+  cursor: pointer
+  font-size: calc(18px + 1.5vw)
+  line-height: 1
+  font-weight: bold
+  color: rgb(0 0 0 / 60%)
+  font-family: 'Inter', sans-serif
+  border-radius: 50%
+  display: flex
+  align-items: center
+  justify-content: center
+  padding: 0
+  position: relative
+  z-index: 10
+  &:disabled
+    background: #F6E6E6
+    border-color: #E4C2C2
+    .redeemed-mark
+      display: block
+      width: 100%
+      height: 100%
+      background: url('../image/button-get.svg') no-repeat center center/80%
+      position: absolute
+      inset: 0
+      opacity: 0.8
+
+
+// 直式
+// @media (orientation: portrait)
+
+// ! 小於 576px
+@media (max-width: 576px)
+  header
+    padding-right: 30px
+  .header-infor
+    display: flex
+    align-items: center
+    justify-content: space-between
+    border-bottom: 1px solid rgb(255 255 255 / 20%)
+// // ! 小於 576px && 橫式
+// @media (orientation: landscape)
+//   @media (max-width: 576px)
+//   header
+//     background-color: red
+
+
+@media (min-width: 576px)
+  @if $dev == true
+    body
+      border: 1px solid blue
+  .header-float
+    --float01-width: 180px
+    display: block
+  .main-float
+    --float02-width: 120px
+    display: block
+  .scratch-wrap
+    padding: 0 20px
+  .grid-container
+    grid-template-columns: repeat(8, 1fr)
+
+// ipad mini
+@media (min-width: 768px)
+  @if $dev == true
+    body
+      border: 1px solid yellow
+  .header-float
+    --float01-width: 140px
+  header .header-container
+    flex-direction: row
+    justify-content: space-between
+    .header-rule
+      padding-right: 30px
+  .header-infor .header-number span
+    font-size: 50px
+  .grid-container
+    grid-template-columns: repeat(12, 1fr)
+
+// ipad air 11"
+@media (min-width: 1024px)
+  @if $dev == true
+    body
+      border: 1px solid #f00
+  .grid-container
+    grid-template-columns: repeat(12, 1fr)
+
+// ipad air 13"
+@media (min-width: 1366px)
+  @if $dev == true
+    body
+      border: 1px solid #2bad19
+  .header-float
+    --float01-width: 200px
+    .float01
+      bottom: -50px
+  header .header-container
+    padding: 20px 0
+  .grid-container
+    grid-template-columns: repeat(14, 1fr)
+  // header
+  //   display: grid
+  //   grid-template-columns: 1fr var(--float01-width)
+  //   height: 180px
+  //   .header-container
+  //     flex-direction: row
+  //     justify-content: space-between
+  //   .header-float
+  //     --float01-width: 240px
+  // .grid-container
+  //   grid-template-columns: repeat(14, 1fr)
