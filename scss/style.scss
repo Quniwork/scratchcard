@@ -1,0 +1,190 @@
+body {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  row-gap: 1em;
+  font-family: sans-serif;
+}
+
+#app {
+  width: 100%;
+  height: 100%;
+}
+
+
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+
+  &-content {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    position: relative;
+  }
+}
+
+.scratch-card {
+  position: relative;
+  border: 4px solid #c7c6cf;
+  border-radius: 8px;
+  padding: 12px;
+  background-color: #fff;
+
+  &-number {
+    border-radius: 4px;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: drop-shadow(0 4px 4px rgba(0, 0, 0, 0.16));
+    user-select: none;
+    will-change: transform;
+
+    span {
+      font-family: 'Inter', sans-serif;
+    }
+
+    &.animate {
+      animation: pop-out-in cubic-bezier(0.65, 1.35, 0.5, 1) 1s;
+    }
+  }
+
+  &-cover {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #cfced6;
+    background-image: linear-gradient(to right, #cfced6, #e0dfe6, #efeef3, #e0dfe6, #cfced6);
+    overflow: hidden;
+
+    &::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: linear-gradient(135deg, transparent 40%, rgba(255, 255, 255, 0.8) 50%, transparent 60%);
+      background-position: bottom right;
+      background-size: 300% 300%;
+      background-repeat: no-repeat;
+    }
+
+    &.shine::before {
+      animation: shine 8s infinite;
+    }
+
+    &::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0.1;
+      filter: url("#noise");
+    }
+
+    &-container {
+      position: absolute;
+      z-index: 1;
+      top: 0;
+      left: 0;
+      border-radius: 4px;
+      width: 100%;
+      height: 100%;
+      filter: url("#remove-black");
+      transition: opacity 0.4s;
+
+      &.clear {
+        opacity: 0;
+      }
+
+      &.hidden {
+        display: none;
+      }
+    }
+
+    &-background {
+      width: 100%;
+      height: 100%;
+      fill: #555;
+      opacity: 0.1;
+    }
+  }
+
+  &-canvas {
+    position: absolute;
+    z-index: 2;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    cursor: grab;
+    touch-action: none;
+
+    &:active {
+      cursor: grabbing;
+    }
+
+    &.hidden {
+      opacity: 0;
+    }
+
+    &-render {
+      position: absolute;
+      z-index: 1;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: transparent;
+      transition: background-color 0.2s;
+
+      &.hidden {
+        display: none;
+      }
+    }
+  }
+}
+
+.close-button {
+  width: 100%;
+  height: 40px;
+}
+
+@keyframes shine {
+  50% {
+    background-position: 0% 0%;
+  }
+
+  100% {
+    background-position: -50% -50%;
+  }
+}
+
+@keyframes pop-out-in {
+  36% {
+    transform: scale(1.125);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}

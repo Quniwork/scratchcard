@@ -4,105 +4,59 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Vue 3 CDN 示例</title>
+  <title>demo</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
-  <link rel="stylesheet" href="style.css">
-  <style>
-    #app {
-      width: 100%;
-      height: 100%;
-    }
-
-    .grid-container {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: .5rem;
-      padding: 20px;
-      margin: 0 auto;
-    }
-
-    /* 手機直式樣式 */
-    @media (orientation: portrait) {
-      .grid-container {
-        grid-template-columns: repeat(5, 1fr);
-      }
-    }
-    @media (orientation: landscape) {
-      .grid-container {
-        grid-template-columns: repeat(10, 1fr);
-      }
-    }
-
-    .grid-button {
-      aspect-ratio: 1;
-      border: none;
-      background: transparent url('image/ic-lucky.png') center/cover no-repeat;
-      cursor: pointer;
-      font-size: calc(16px + 3vw);
-      line-height: 1;
-      font-weight: bold;
-      font-family: 'Inter', sans-serif;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0;
-      &:disabled {
-        background: #ccc;
-      }
-    }
-
-    .modal {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.5);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-    }
-    
-    .modal-content {
-      background: white;
-      padding: 20px;
-      border-radius: 8px;
-      position: relative;
-    }
-
-    .scratch-card {
-      width: 200px;
-      height: 200px;
-    }
-
-    .scratch-card-number span {
-      font-family: 'Inter', sans-serif;
-    }
-
-    .close-button {
-      width: 100%;
-      height: 40px;
-    }
-  </style>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/style2.css">
 </head>
 
 <body>
   <div id="app">
-    <div class="grid-container">
-      <button v-for="(num, index) in gridNumbers" 
-              :key="index"
-              class="grid-button"
-              @click="openScratchCard(index)"
-              :disabled="revealedNumbers[index] !== null">
-        {{ revealedNumbers[index] !== null ? revealedNumbers[index] : '' }}
-      </button>
+    <div class="float">
+      <img src="image/float01.png" class="float01">
+      <img src="image/float02.png" class="float02">
     </div>
+    <header>
+      <div class="header-left">
+        <div class="header-number">
+          <span class="year">2024</span>
+          <span class="period">第4期</span>
+        </div>
+        <ul class="scratch-rule">
+          <li>此活動為額外加碼，非機台內販售商品</li>
+          <li>符合資格可自由參加，同意再投幣</li>
+          <li>請遵守活動規則，若 多刮、作弊 及獲獎無效</li>
+          <li>台主擁有變更或提前結束活動權利</li>
+        </ul>
+        <img src="image/logo.png" class="scratch-logo">
+      </div>
+    </header>
+    <main class="scratch-wrap">
+      <div class="grid-container">
+        <button v-for="(num, index) in gridNumbers"
+                :key="index"
+                class="grid-button"
+                :class="{
+                  'is-scratched': revealedNumbers[index] !== null,
+                  'is-redeemed': redeemedNumbers[index]
+                }"
+                @click="openScratchCard(index)"
+                :disabled="revealedNumbers[index] !== null">
+          {{ revealedNumbers[index] !== null ? revealedNumbers[index] : '' }}
+          <span v-if="redeemedNumbers[index]" class="redeemed-mark"></span>
+        </button>
+      </div>
+      
+      <!-- 添加測試按鈕 -->
+      <div class="test-buttons">
+        <button @click="testRedeem">測試兌換</button>
+        <button @click="resetRedeem">重置兌換狀態</button>
+      </div>
+    </main>
 
     <div v-if="showModal" class="modal">
       <div class="modal-content">
@@ -122,7 +76,12 @@
         </div>
 
         <p class="scratch-card-text">🎁 刮出您的幸運數字!</p>
-        <button class="close-button" @click="closeModal">關閉</button>
+        <button class="close-button" @click="closeModal">{{ isScratched ? '關閉' : '換一個' }}</button>
+        <button v-if="isScratched && !redeemedNumbers[currentIndex]" 
+                class="redeem-button" 
+                @click="redeemNumber">
+          兌換獎品
+        </button>
       </div>
     </div>
 
@@ -153,7 +112,34 @@
         const currentNumber = ref(null);
         const gridNumbers = ref(Array(80).fill(null).map((_, i) => i + 1).sort(() => Math.random() - 0.5));
         const revealedNumbers = ref(Array(80).fill(null));
+        const redeemedNumbers = ref(Array(80).fill(false)); // 新增兌換狀態追蹤
         const numberCanvas = ref(null);
+        const isScratched = ref(false);
+
+        // 新增兌換功能
+        const redeemNumber = () => {
+          if (currentIndex.value !== null) {
+            redeemedNumbers.value[currentIndex.value] = true;
+            closeModal();
+          }
+        };
+
+        // 測試用函數
+        const testRedeem = () => {
+          // 隨機選擇一個已刮開的數字進行兌換
+          const scratchedIndices = revealedNumbers.value
+            .map((num, index) => num !== null ? index : -1)
+            .filter(index => index !== -1);
+          
+          if (scratchedIndices.length > 0) {
+            const randomIndex = scratchedIndices[Math.floor(Math.random() * scratchedIndices.length)];
+            redeemedNumbers.value[randomIndex] = true;
+          }
+        };
+
+        const resetRedeem = () => {
+          redeemedNumbers.value = Array(80).fill(false);
+        };
 
         const scratchCardCover = ref(null);
         const scratchCardCanvasRender = ref(null);
@@ -181,6 +167,7 @@
           currentIndex.value = index;
           currentNumber.value = gridNumbers.value[index];
           showModal.value = true;
+          isScratched.value = false;
           setTimeout(() => {
             initCanvas();
             drawNumber();
@@ -195,6 +182,7 @@
           scratchCardCover.value?.classList.add('shine');
           scratchCardCoverContainer.value?.classList.remove('clear', 'hidden');
           scratchCardImage.value?.classList.remove('animate');
+          isScratched.value = false;
         };
 
         const initCanvas = () => {
@@ -221,6 +209,22 @@
           }
 
           setupEventListeners();
+          
+          // 添加點擊事件監聽器到scratch-card-number
+          scratchCardImage.value.addEventListener('click', () => {
+            isScratched.value = true;
+            scratchCardCoverContainer.value.classList.add('clear', 'hidden');
+            scratchCardText.value.textContent = '🎉 恭喜刮出 ' + currentNumber.value + ' !';
+            scratchCardImage.value.classList.add('animate');
+            revealedNumbers.value[currentIndex.value] = currentNumber.value;
+            confetti({
+              particleCount: 100,
+              spread: 90,
+              origin: {
+                y: (scratchCardText.value.getBoundingClientRect().bottom + 60) / window.innerHeight,
+              },
+            });
+          });
         };
 
         const setupEventListeners = () => {
@@ -261,7 +265,8 @@
 
           const blackFillPercentage = blackPixelCount * 100 / (canvas.value.width * canvas.value.height);
 
-          if (blackFillPercentage >= 15) { // 降低觸發百分比到15%
+          if (blackFillPercentage >= 1) { // 刮開就觸發
+            isScratched.value = true;
             scratchCardCoverContainer.value.classList.add('clear');
             confetti({
               particleCount: 100,
@@ -348,11 +353,17 @@
           isSafari,
           showModal,
           currentNumber,
+          currentIndex,
           gridNumbers,
           revealedNumbers,
+          redeemedNumbers,
           openScratchCard,
           closeModal,
-          numberCanvas
+          numberCanvas,
+          isScratched,
+          redeemNumber,
+          testRedeem,
+          resetRedeem
         }
       }
     })

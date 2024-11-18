@@ -1,3 +1,10 @@
 {
-  "nuxt.isNuxtApp": false
+  "liveSassCompile.settings.formats": [
+		{
+			"format": "compressed",
+			"extensionName": ".css",
+			"savePath": "/css"
+		}
+	],
+	"nuxt.isNuxtApp": false,
 }
