@@ -10,20 +10,20 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/styleB.css">
 </head>
 
 <body>
   <div id="app">
-    <header>
-      <div class="header-container">
-        <div class="header-infor">
-          <div class="header-number">
+    <div class="aside">
+      <div class="aside-container">
+        <div class="aside-infor">
+          <div class="aside-number">
             <span>{{ totalNumbers - revealedNumbers.filter(n => n !== null).length }}</span>/<span>{{ totalNumbers }}</span>
           </div>
-          <div class="header-datetime">{{ currentDateTime }}</div>
+          <div class="aside-datetime">{{ currentDateTime }}</div>
         </div>
-        <div class="header-rule">
+        <div class="aside-rule">
           <ul class="scratch-rule">
             <li>此活動為額外加碼，非機台內販售商品</li>
             <li>符合資格可自由參加，同意再投幣</li>
@@ -32,14 +32,8 @@
           </ul>
         </div>
       </div>
-      <!-- <div class="header-float">
-        <img src="image/float01.png" class="float01">
-      </div> -->
-    </header>
+    </div>
     <main class="scratch-wrap">
-      <!-- <div class="main-float">
-        <img src="image/float02.png" class="float02">
-      </div> -->
       <div class="grid-container">
         <button v-for="(num, index) in gridNumbers"
                 :key="index"
@@ -54,12 +48,6 @@
           <span v-if="redeemedNumbers[index]" class="redeemed-mark"></span>
         </button>
       </div>
-
-      <!-- 添加測試按鈕 -->
-      <!-- <div class="test-buttons">
-        <button @click="testRedeem">測試兌換</button>
-        <button @click="resetRedeem">重置兌換狀態</button>
-      </div> -->
     </main>
 
     <div v-if="showModal" class="modal">
@@ -82,11 +70,6 @@
         <p class="scratch-card-text">🎁 刮出您的幸運數字!</p>
         <button class="close-button" @click="closeModal" :disabled="isScratching || !canClose" v-if="isScratched">關閉</button>
         <button class="close-button" @click="closeModal" v-else>換一個</button>
-        <!-- <button v-if="isScratched && !redeemedNumbers[currentIndex]" 
-                class="redeem-button" 
-                @click="redeemNumber">
-          兌換獎品
-        </button> -->
       </div>
     </div>
 
@@ -109,7 +92,7 @@
 
     const app = createApp({
       setup() {
-        const totalNumbers = 68; // 總數量設定
+        const totalNumbers = 72; // 總數量設定
 
         const isSafari = ref(/^((?!chrome|android).)*safari/i.test(navigator.userAgent));
         let previousUrl = null;
