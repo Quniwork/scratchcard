@@ -19,7 +19,7 @@
       <div class="header-container">
         <div class="header-infor">
           <div class="header-number">
-            <span>{{ TOTAL_NUMBERS - revealedNumbers.filter(n => n !== null).length }}</span>/<span>{{ TOTAL_NUMBERS }}</span>
+            <span>{{ totalNumbers - revealedNumbers.filter(n => n !== null).length }}</span>/<span>{{ totalNumbers }}</span>
           </div>
           <div class="header-datetime">{{ currentDateTime }}</div>
         </div>
@@ -54,7 +54,7 @@
           <span v-if="redeemedNumbers[index]" class="redeemed-mark"></span>
         </button>
       </div>
-      
+
       <!-- 添加測試按鈕 -->
       <!-- <div class="test-buttons">
         <button @click="testRedeem">測試兌換</button>
@@ -80,7 +80,7 @@
         </div>
 
         <p class="scratch-card-text">🎁 刮出您的幸運數字!</p>
-        <button class="close-button" @click="closeModal" :disabled="isScratching">{{ isScratched ? '關閉' : '換一個' }}</button>
+        <button class="close-button" @click="closeModal" :disabled="isScratching || !canClose">{{ isScratched ? '關閉' : '換一個' }}</button>
         <!-- <button v-if="isScratched && !redeemedNumbers[currentIndex]" 
                 class="redeem-button" 
                 @click="redeemNumber">
@@ -108,21 +108,22 @@
 
     const app = createApp({
       setup() {
-        const TOTAL_NUMBERS = 68; // 總數量設定
-        
+        const totalNumbers = 68; // 總數量設定
+
         const isSafari = ref(/^((?!chrome|android).)*safari/i.test(navigator.userAgent));
         let previousUrl = null;
 
         const showModal = ref(false);
         const currentIndex = ref(null);
         const currentNumber = ref(null);
-        const gridNumbers = ref(Array(TOTAL_NUMBERS).fill(null).map((_, i) => i + 1).sort(() => Math.random() - 0.5));
-        const revealedNumbers = ref(Array(TOTAL_NUMBERS).fill(null));
-        const redeemedNumbers = ref(Array(TOTAL_NUMBERS).fill(false));
+        const gridNumbers = ref(Array(totalNumbers).fill(null).map((_, i) => i + 1).sort(() => Math.random() - 0.5));
+        const revealedNumbers = ref(Array(totalNumbers).fill(null));
+        const redeemedNumbers = ref(Array(totalNumbers).fill(false));
         const numberCanvas = ref(null);
         const isScratched = ref(false);
         const isScratching = ref(false);
         const currentDateTime = ref('');
+        const canClose = ref(false); // 新增控制關閉按鈕的狀態
 
         // 更新當前時間
         const updateDateTime = () => {
@@ -154,7 +155,7 @@
           const scratchedIndices = revealedNumbers.value
             .map((num, index) => num !== null ? index : -1)
             .filter(index => index !== -1);
-          
+
           if (scratchedIndices.length > 0) {
             const randomIndex = scratchedIndices[Math.floor(Math.random() * scratchedIndices.length)];
             redeemedNumbers.value[randomIndex] = true;
@@ -162,7 +163,7 @@
         };
 
         const resetRedeem = () => {
-          redeemedNumbers.value = Array(TOTAL_NUMBERS).fill(false);
+          redeemedNumbers.value = Array(totalNumbers).fill(false);
         };
 
         const scratchCardCover = ref(null);
@@ -246,6 +247,7 @@
           showModal.value = true;
           isScratched.value = false;
           isScratching.value = false;
+          canClose.value = false; // 重置關閉按鈕狀態
           setTimeout(() => {
             initCanvas();
             drawNumber();
@@ -253,7 +255,7 @@
         };
 
         const closeModal = () => {
-          if (!isScratching.value) {
+          if (!isScratching.value && canClose.value) {
             showModal.value = false;
             if(canvas.value) {
               context.value.clearRect(0, 0, canvas.value.width, canvas.value.height);
@@ -263,6 +265,7 @@
             scratchCardImage.value?.classList.remove('animate');
             isScratched.value = false;
             isScratching.value = false;
+            canClose.value = false; // 重置關閉按鈕狀態
           }
         };
 
@@ -306,6 +309,10 @@
                 y: (scratchCardText.value.getBoundingClientRect().bottom + 60) / window.innerHeight,
               },
             });
+            // 延遲1.5秒後才允許關閉
+            setTimeout(() => {
+              canClose.value = true;
+            }, 1500);
           });
         };
 
@@ -315,6 +322,7 @@
 
         const handlePointerDown = (e) => {
           isScratching.value = true;
+          isScratched.value = true; // 當開始刮的時候就設置為true
           scratchCardCover.value.classList.remove('shine');
           ({ x: positionX, y: positionY } = getPosition(e));
           clearTimeout(clearDetectionTimeout);
@@ -323,6 +331,7 @@
 
           window.addEventListener('pointerup', (e) => {
             canvas.value.removeEventListener('pointermove', plot);
+            clearTimeout(clearDetectionTimeout);
             clearDetectionTimeout = setTimeout(() => {
               checkBlackFillPercentage();
               isScratching.value = false;
@@ -350,7 +359,6 @@
           const blackFillPercentage = blackPixelCount * 100 / (canvas.value.width * canvas.value.height);
 
           if (blackFillPercentage >= 1) { // 刮開就觸發
-            isScratched.value = true;
             scratchCardCoverContainer.value.classList.add('clear');
             confetti({
               particleCount: 100,
@@ -367,6 +375,10 @@
               // 移除事件監聽器,防止繼續刮
               canvas.value.removeEventListener('pointerdown', handlePointerDown);
               canvas.value.removeEventListener('pointermove', plot);
+              // 延遲1.5秒後才允許關閉
+              setTimeout(() => {
+                canClose.value = true;
+              }, 1500);
             }, { once: true });
           }
         };
@@ -450,7 +462,8 @@
           testRedeem,
           resetRedeem,
           currentDateTime,
-          TOTAL_NUMBERS
+          totalNumbers,
+          canClose // 導出canClose狀態
         }
       }
     })
